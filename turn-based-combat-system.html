@@ -89,10 +89,7 @@
     </div>
     <div class="controls">
         <button id="export-button">Export to CSV (click after table generated)</button>
-
     </div>
-
-
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
     <script>
         const unitData = [
@@ -127,8 +124,7 @@
             {name: 'Mountain', health: 136657, armor: 0, damage: 5899, frequency: 2, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
             {name: 'Fire Badger', health: 5184, armor: 0, damage: 28, frequency: 0.1, range: 60, splashRadius: 9, speed: 10, totalSubunits: 3, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
             {name: 'Typhoon', health: 9529, armor: 0, damage: 88, frequency: 0.2, range: 100, splashRadius: 5, speed: 9, totalSubunits: 1, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false}
-        ];
-        
+        ];   
         function startSimulation() {
             const results = [];
             for (let i = 0; i < unitData.length; i++) {
@@ -159,7 +155,6 @@
             else {
                 initialTimeToFire = 0; 
             }
-
             return {
                 ...unitType,
                 subunits: unitType.totalSubunits,
@@ -186,24 +181,20 @@
                 if (subunitHealths[i] > 0) {
                     availableTargets.push(i);
                 }
-            }
-            
+            }   
             // Shuffle the available targets to ensure random selection
             for (let i = availableTargets.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [availableTargets[i], availableTargets[j]] = [availableTargets[j], availableTargets[i]];
-            }
-            
+            } 
             // Select up to 'count' targets
             for (let i = 0; i < Math.min(count, availableTargets.length); i++) {
                 targets.push(availableTargets[i]);
             }
-
             // Pad with -1 if fewer than 'count' targets are available
             while (targets.length < count) {
                 targets.push(-1);
             }
-
             return targets;
         }
 
@@ -223,10 +214,8 @@
             if (subunitIndex === -1) {
                 return;
             }
-
             // Apply main damage to the primary target
-            applyDamageToSubunit(defender, subunitIndex, damageToApply);
-            
+            applyDamageToSubunit(defender, subunitIndex, damageToApply);           
             // Check for splash damage
             if (attacker.splashRadius > 0) {
                 const splashDamage = attacker.isBeamWeapon ? damageToApply : attacker.damage;
@@ -270,7 +259,6 @@
                 const loserInitialHealth = loserUnit.totalSubunits * loserUnit.health;
                 survivalRatio = loserUnit.subunitHealths.reduce((total, health) => total + health, 0) / loserInitialHealth;                winnerSubunits = loserUnit.subunits;
             }
-
             return {
                 winner: winner,
                 time: time.toFixed(2),
@@ -282,8 +270,7 @@
         }
         function simulateBattle(attackerType, defenderType) {
             const attackerCannotAttack = attackerType.isFlier && !defenderType.canAttackFliers && !defenderType.isFlier;
-            const defenderCannotAttack = !attackerType.isFlier && defenderType.isFlier && !attackerType.canAttackFliers;
-            
+            const defenderCannotAttack = !attackerType.isFlier && defenderType.isFlier && !attackerType.canAttackFliers;            
             const initialDistance = Math.max(attackerType.range, defenderType.range) + 1;
 
             if (attackerCannotAttack || defenderCannotAttack) {
@@ -299,8 +286,7 @@
             }
 
             let attacker = createUnit(attackerType);
-            let defender = createUnit(defenderType);
-            
+            let defender = createUnit(defenderType);            
             let time = 0;
             const timeStep = 0.1;
             let distance = initialDistance;
@@ -334,11 +320,9 @@
                                 if (attacker.isBeamWeapon) {
                                     attacker.damageRampTimers[i] = 0;
                                 }
-                            }
-                            
+                            }                           
                             if (targetIndex !== -1) {
-                                const canDamageDefender = !(defender.undergroundMovement && defenderIsMoving);
-                                
+                                const canDamageDefender = !(defender.undergroundMovement && defenderIsMoving);                                
                                 if (canDamageDefender) {
                                     if (attacker.isBeamWeapon) {
                                         attacker.damageRampTimers[i] += timeStep;
@@ -370,16 +354,14 @@
                 if (isDefenderInRange) {
                     for (let i = 0; i < defender.totalSubunits; i++) {
                         if (defender.subunitHealths[i] > 0) {
-                            let targetIndex = defender.targetIndexes[i];
-                            
+                            let targetIndex = defender.targetIndexes[i];                           
                             if (targetIndex === -1 || attacker.subunitHealths[targetIndex] <= 0) {
                                 targetIndex = findNewTarget(attacker.subunitHealths);
                                 defender.targetIndexes[i] = targetIndex;
                                 if (defender.isBeamWeapon) {
                                     defender.damageRampTimers[i] = 0;
                                 }
-                            }
-                            
+                            }                            
                             if (targetIndex !== -1) {
                                 const canDamageAttacker = !(attacker.undergroundMovement && attackerIsMoving);
 
@@ -409,29 +391,23 @@
                         }
                     }
                 }
-
                 debugLog.push({
                     time: time.toFixed(2),
                     attackerSubunits: attacker.subunits,
                     defenderSubunits: defender.subunits,
                     distance: distance.toFixed(2)
                 });
-
-
                 // Check for win/loss conditions
                 if (attacker.subunits === 0 || defender.subunits === 0) {
                     break;
                 }
-
                 time += timeStep;
                 if (time > 1000) break;
             }
             
-            const battleResult = getResult(attacker.subunits > 0 ? attacker : defender, attacker.subunits > 0 ? defender : attacker, time, initialDistance);
-            
+            const battleResult = getResult(attacker.subunits > 0 ? attacker : defender, attacker.subunits > 0 ? defender : attacker, time, initialDistance);          
             // Attach the debug log to the result
-            battleResult.debugLog = debugLog; 
-            
+            battleResult.debugLog = debugLog;             
             return battleResult;
         }
         
@@ -519,13 +495,14 @@ function displayResults(results) {
                         {title: "Distance", field: "distance"}
                     ]
                 });
-                    // Place the event listener here, after the table is defined
-                document.getElementById('export-button').addEventListener('click', function() {
-                    table.download("csv", "battle_results.csv");
-                });
             }
         }
     });
+    // Place the event listener here, after the table is defined
+    document.getElementById('export-button').addEventListener('click', function() {
+        table.download("csv", "battle_results.csv");
+    });
+
 }
         // Keep this at the very end of the <script> block, after all functions are defined
         document.addEventListener('DOMContentLoaded', (event) => {
