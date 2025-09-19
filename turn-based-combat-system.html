@@ -79,7 +79,7 @@
 </head>
 <body>
     <div class="container">
-        <div id="version-number">Version 1.1</div>
+        <div id="version-number">Version 1.2</div>
         <h1>Clearly and Rask's Mechabellum Unit Combat Simulator</h1>
         <p style="text-align: center;">Simulating every unit against every other unit.</p>
         <div class="controls">
@@ -87,6 +87,11 @@
         </div>
         <div id="resultsTable"></div>
     </div>
+    <div class="controls">
+        <button id="export-button">Export to CSV (click after table generated)</button>
+
+    </div>
+
 
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
     <script>
@@ -513,6 +518,10 @@ function displayResults(results) {
                         {title: "Defender Subunits", field: "defenderSubunits"},
                         {title: "Distance", field: "distance"}
                     ]
+                });
+                    // Place the event listener here, after the table is defined
+                document.getElementById('export-button').addEventListener('click', function() {
+                    table.download("csv", "battle_results.csv");
                 });
             }
         }
