@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clearly and Rask's Mechabellum Unit Combat Simulator</title>
+    (its close!)
+    <link href="https://unpkg.com/tabulator-tables@6.2.1/dist/css/tabulator.min.css" rel="stylesheet">
+    <style>
+        body { 
+            font-family: sans-serif; 
+            background-color: #f0f2f5; 
+            color: #333;
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 20px; 
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 { 
+            text-align: center; 
+            color: #2c3e50; 
+            margin-bottom: 20px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button { 
+            padding: 12px 24px; 
+            background-color: #3498db; 
+            color: white; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 4px; 
+            font-size: 16px; 
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #resultsTable { 
+            margin-top: 20px;
+        }
+        /* Custom styles for Tabulator */
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+            text-align: center;
+        }
+        .tabulator .tabulator-tableHolder .tabulator-placeholder {
+            text-align: center;
+        }
+        .tabulator-row .tabulator-cell {
+            text-align: center;
+        }
+        .winner {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .loser {
+            color: #c0392b;
+        }
+        .draw {
+            color: #f39c12;
+        }
+        #version-number {
+            position: absolute; /* Positions the element relative to the nearest positioned ancestor or the document body */
+            top: 10px;        /* 10 pixels from the top edge */
+            right: 10px;       /* 10 pixels from the right edge */
+            color: green;      /* Sets the text color to green */
+            font-weight: bold; /* Makes the text bold */
+            font-family: sans-serif; /* A clear, readable font */
+            text-shadow: 1px 1px 2px #00000080; /* A subtle shadow for contrast */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="version-number">Version 1.0</div>
+        <h1>Clearly and Rask's Mechabellum Unit Combat Simulator</h1>
+        <p style="text-align: center;">Simulating every unit against every other unit.</p>
+        <div class="controls">
+            <button id="startButton">Start Simulation</button>
+        </div>
+        <div id="resultsTable"></div>
+    </div>
+
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
+    <script>
+        const unitData = [
+            {name: 'Crawler', health: 263, armor: 0, damage: 79, frequency: 0.6, range: 0, splashRadius: 0, speed: 16, totalSubunits: 24, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Fang', health: 117, armor: 0, damage: 63, frequency: 1.5, range: 75, splashRadius: 0, speed: 6, totalSubunits: 18, depth: 10, width: 40, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Hound', health: 897, armor: 0, damage: 246, frequency: 2.4, range: 70, splashRadius: 6, speed: 10, totalSubunits: 5, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Void Eye', health: 1509, armor: 0, damage: 1008, frequency: 3.2, range: 100, splashRadius: 0, speed: 8, totalSubunits: 3, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Arclight', health: 4813, armor: 0, damage: 347, frequency: 0.9, range: 95, splashRadius: 7, speed: 7, totalSubunits: 1, depth: 10, width: 16, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Marksman', health: 1622, armor: 0, damage: 2329, frequency: 3.1, range: 140, splashRadius: 0, speed: 8, totalSubunits: 1, depth: 10, width: 16, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Mustang', health: 343, armor: 0, damage: 36, frequency: 0.4, range: 95, splashRadius: 0, speed: 16, totalSubunits: 12, depth: 10, width: 40, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Sledgehammer', health: 3478, armor: 0, damage: 608, frequency: 4.5, range: 95, splashRadius: 5, speed: 7, totalSubunits: 5, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Stormcaller', health: 1149, armor: 0, damage: 772, frequency: 6.6, range: 180, splashRadius: 5.5, speed: 6, totalSubunits: 4, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Steel Ball', health: 4571, armor: 0, damage: 0, frequency: 0.2, range: 45, splashRadius: 0, speed: 16, totalSubunits: 4, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: true, minDamage: 2, maxDamage: 2605, rampUpTime: 6, undergroundMovement:false},
+            {name: 'Sabertooth', health: 15541, armor: 0, damage: 7858, frequency: 3.4, range: 95, splashRadius: 5, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Tarantula', health: 13273, armor: 0, damage: 496, frequency: 0.6, range: 80, splashRadius: 5, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Rhino', health: 19297, armor: 0, damage: 3560, frequency: 0.9, range: 0, splashRadius: 6, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Hacker', health: 3249, armor: 0, damage: 585, frequency: 0.3, range: 110, splashRadius: 0, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Wasp', health: 311, armor: 0, damage: 202, frequency: 1.4, range: 50, splashRadius: 0, speed: 16, totalSubunits: 12, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Phoenix', health: 1420, armor: 0, damage: 2892, frequency: 3.4, range: 120, splashRadius: 0, speed: 16, totalSubunits: 2, depth: 10, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Phantom Ray', health: 3412, armor: 0, damage: 1087, frequency: 3, range: 65, splashRadius: 3, speed: 16, totalSubunits: 3, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Wraith', health: 14551, armor: 0, damage: 392, frequency: 1.6, range: 60, splashRadius: 8, speed: 10, totalSubunits: 1, depth: 15, width: 24, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Scropion', health: 18632, armor: 0, damage: 10650, frequency: 4.5, range: 100, splashRadius: 15, speed: 7, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Farseer', health: 11991, armor: 0, damage: 1348, frequency: 2, range: 125, splashRadius: 8, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Vulcan', health: 33566, armor: 0, damage: 88, frequency: 0.1, range: 95, splashRadius: 15, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Melting Point', health: 30907, armor: 0, damage: 0, frequency: 0.2, range: 115, splashRadius: 3, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: true, isBeamWeapon: true, minDamage: 2, maxDamage: 7952, rampUpTime: 6, undergroundMovement:false},
+            {name: 'Fortress', health: 43938, armor: 0, damage: 6524, frequency: 1.8, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Sandworm', health: 48645, armor: 0, damage: 9352, frequency: 2.5, range: 0, splashRadius: 12, speed: 16, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:true},
+            {name: 'Raiden', health: 18349, armor: 0, damage: 5570, frequency: 4.6, range: 110, splashRadius: 0, speed: 10, totalSubunits: 1, depth: 20, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Overlord', health: 20323, armor: 0, damage: 4474, frequency: 4.6, range: 120, splashRadius: 7, speed: 10, totalSubunits: 1, depth: 25, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'War Factory', health: 113593, armor: 0, damage: 7520, frequency: 1.8, range: 100, splashRadius: 4.5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Abyss', health: 66955, armor: 0, damage: 3859, frequency: 4, range: 100, splashRadius: 10, speed: 10, totalSubunits: 1, depth: 35, width: 56, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Mountain', health: 136657, armor: 0, damage: 5899, frequency: 2, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Fire Badger', health: 5184, armor: 0, damage: 28, frequency: 0.1, range: 60, splashRadius: 9, speed: 10, totalSubunits: 3, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
+            {name: 'Typhoon', health: 9529, armor: 0, damage: 88, frequency: 0.2, range: 100, splashRadius: 5, speed: 9, totalSubunits: 1, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false}
+        ];
+        
+        function startSimulation() {
+            const results = [];
+            for (let i = 0; i < unitData.length; i++) {
+                for (let j = 0; j < unitData.length; j++) {
+                    if (i === j) continue;
+                    const attackerUnit = unitData[i];
+                    const defenderUnit = unitData[j];
+                    const battleResult = simulateBattle(attackerUnit, defenderUnit);
+                    results.push({
+                        attacker: attackerUnit.name,
+                        defender: defenderUnit.name,
+                        ...battleResult
+                    });
+                }
+            }
+            displayResults(results);
+        }
+
+        function createUnit(unitType) {
+            let initialTimeToFire;
+            
+            // All units except the Sandworm attack immediately.
+            // Setting their timer to frequency allows the loop's check to pass on the first frame.
+            if (unitType.name !== 'Sandworm') {
+                initialTimeToFire = unitType.frequency; 
+            }
+            // The Sandworm has a delay, so its timer must charge up from 0.
+            else {
+                initialTimeToFire = 0; 
+            }
+
+            return {
+                ...unitType,
+                subunits: unitType.totalSubunits,
+                currentHealth: unitType.totalSubunits * unitType.health,
+                subunitHealths: Array(unitType.totalSubunits).fill(unitType.health),
+                timeToFire: Array(unitType.totalSubunits).fill(initialTimeToFire),
+                damageRampTimers: Array(unitType.totalSubunits).fill(0),
+                targetIndexes: Array(unitType.totalSubunits).fill(-1),
+                initialHealth: unitType.totalSubunits * unitType.health,
+            };
+        }
+
+        function calculateBeamDamage(unit, timeFiring) {
+            const damagePerSecond = (unit.maxDamage - unit.minDamage) / unit.rampUpTime;
+            const currentDamage = unit.minDamage + (damagePerSecond * timeFiring);
+            return Math.min(unit.maxDamage, currentDamage);
+        }
+
+        // Find multiple distinct living targets
+        function findMultipleTargets(subunitHealths, count) {
+            const targets = [];
+            const availableTargets = [];
+            for (let i = 0; i < subunitHealths.length; i++) {
+                if (subunitHealths[i] > 0) {
+                    availableTargets.push(i);
+                }
+            }
+            
+            // Shuffle the available targets to ensure random selection
+            for (let i = availableTargets.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableTargets[i], availableTargets[j]] = [availableTargets[j], availableTargets[i]];
+            }
+            
+            // Select up to 'count' targets
+            for (let i = 0; i < Math.min(count, availableTargets.length); i++) {
+                targets.push(availableTargets[i]);
+            }
+
+            // Pad with -1 if fewer than 'count' targets are available
+            while (targets.length < count) {
+                targets.push(-1);
+            }
+
+            return targets;
+        }
+
+        // New function to apply damage to a specific subunit, handling death
+        function applyDamageToSubunit(unit, subunitIndex, damage) {
+            if (unit.subunitHealths[subunitIndex] > 0) {
+                unit.subunitHealths[subunitIndex] -= damage;
+                if (unit.subunitHealths[subunitIndex] <= 0) {
+                    unit.subunitHealths[subunitIndex] = 0;
+                    unit.subunits--;
+                }
+            }
+        }
+
+        // This new function handles a single attack, including splash
+        function performAttack(attacker, defender, subunitIndex, damageToApply, timeStep) {
+            if (subunitIndex === -1) {
+                return;
+            }
+
+            // Apply main damage to the primary target
+            applyDamageToSubunit(defender, subunitIndex, damageToApply);
+            
+            // Check for splash damage
+            if (attacker.splashRadius > 0) {
+                const splashDamage = attacker.isBeamWeapon ? damageToApply : attacker.damage;
+                 // Simplified splash damage application to nearby units.
+                // The code currently targets the first 'n' available subunits.
+                const subunitsHit = Math.ceil((0.5 * Math.PI * Math.pow(attacker.splashRadius, 2)) / ((defender.depth * defender.width) / defender.totalSubunits));
+                let damagedCount = 0;
+                
+            for (let i = 0; i < defender.totalSubunits && damagedCount < subunitsHit; i++) {
+                    if (i !== subunitIndex && defender.subunitHealths[i] > 0) {
+                        applyDamageToSubunit(defender, i, splashDamage);
+                        damagedCount++;
+                    }
+                }
+            }
+        }
+        
+        // A function to find the index of a new, alive target
+        function findNewTarget(subunitHealths) {
+            for (let i = 0; i < subunitHealths.length; i++) {
+                if (subunitHealths[i] > 0) {
+                    return i;
+                }
+            }
+            return -1; // No valid target found
+        }
+        
+        function getResult(winnerUnit, loserUnit, time, initialDistance) {
+            let winner = 'Draw';
+            let survivalRatio = 0;
+            let winnerSubunits = 0;
+
+            if (winnerUnit.subunits > 0) {
+                winner = winnerUnit.name;
+                // Calculate survival ratio based on the sum of remaining health
+                const winnerInitialHealth = winnerUnit.totalSubunits * winnerUnit.health;
+                survivalRatio = winnerUnit.subunitHealths.reduce((total, health) => total + health, 0) / winnerInitialHealth;
+                winnerSubunits = winnerUnit.subunits;
+            } else if (loserUnit.subunits > 0) {
+                winner = loserUnit.name;
+                const loserInitialHealth = loserUnit.totalSubunits * loserUnit.health;
+                survivalRatio = loserUnit.subunitHealths.reduce((total, health) => total + health, 0) / loserInitialHealth;                winnerSubunits = loserUnit.subunits;
+            }
+
+            return {
+                winner: winner,
+                time: time.toFixed(2),
+                survivalRatio: (survivalRatio * 100).toFixed(2),
+                winnerSubunits: winnerSubunits,
+                isNoContest: false,
+                startingDistance: initialDistance.toFixed(2)
+            };
+        }
+        function simulateBattle(attackerType, defenderType) {
+            const attackerCannotAttack = attackerType.isFlier && !defenderType.canAttackFliers && !defenderType.isFlier;
+            const defenderCannotAttack = !attackerType.isFlier && defenderType.isFlier && !attackerType.canAttackFliers;
+            
+            const initialDistance = Math.max(attackerType.range, defenderType.range) + 1;
+
+            if (attackerCannotAttack || defenderCannotAttack) {
+                const winnerType = attackerCannotAttack ? attackerType : defenderType;
+                return {
+                    winner: winnerType.name,
+                    time: 0,
+                    survivalRatio: 100,
+                    winnerSubunits: winnerType.totalSubunits,
+                    isNoContest: true,
+                    startingDistance: initialDistance.toFixed(2)
+                };
+            }
+
+            let attacker = createUnit(attackerType);
+            let defender = createUnit(defenderType);
+            
+            let time = 0;
+            const timeStep = 0.1;
+            let distance = initialDistance;
+            let debugLog = []; // Correct placement of the debug log array
+            
+            while (attacker.subunits > 0 && defender.subunits > 0) {
+                // Corrected Movement Logic
+                let isAttackerInRange = attacker.range >= distance;
+                let isDefenderInRange = defender.range >= distance;
+
+                let attackerIsMoving = !isAttackerInRange;
+                let defenderIsMoving = !isDefenderInRange;
+
+                if (attackerIsMoving && defenderIsMoving) {
+                    distance = Math.max(0, distance - (attacker.speed + defender.speed) * timeStep);
+                } else if (attackerIsMoving) {
+                    distance = Math.max(0, distance - attacker.speed * timeStep);
+                } else if (defenderIsMoving) {
+                    distance = Math.max(0, distance - defender.speed * timeStep);
+                }
+                
+                // Attacker Attack Logic
+                if (isAttackerInRange) {
+                    for (let i = 0; i < attacker.totalSubunits; i++) {
+                        if (attacker.subunitHealths[i] > 0) {
+                            let targetIndex = attacker.targetIndexes[i];
+                            
+                            if (targetIndex === -1 || defender.subunitHealths[targetIndex] <= 0) {
+                                targetIndex = findNewTarget(defender.subunitHealths);
+                                attacker.targetIndexes[i] = targetIndex;
+                                if (attacker.isBeamWeapon) {
+                                    attacker.damageRampTimers[i] = 0;
+                                }
+                            }
+                            
+                            if (targetIndex !== -1) {
+                                const canDamageDefender = !(defender.undergroundMovement && defenderIsMoving);
+                                
+                                if (canDamageDefender) {
+                                    if (attacker.isBeamWeapon) {
+                                        attacker.damageRampTimers[i] += timeStep;
+                                        let damagePerTick = calculateBeamDamage(attacker, attacker.damageRampTimers[i]) * timeStep;
+                                        performAttack(attacker, defender, targetIndex, damagePerTick, timeStep);
+                                    } else {
+                                        attacker.timeToFire[i] += timeStep;
+                                        if (attacker.timeToFire[i] >= attacker.frequency) {
+                                            if (attacker.name === 'Raiden') {
+                                                const targets = findMultipleTargets(defender.subunitHealths, 3);
+                                                targets.forEach(idx => {
+                                                    if (idx !== -1) {
+                                                        performAttack(attacker, defender, idx, attacker.damage, timeStep);
+                                                    }
+                                                });
+                                            } else {
+                                                performAttack(attacker, defender, targetIndex, attacker.damage, timeStep);
+                                            }
+                                            attacker.timeToFire[i] = 0;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Defender Attack Logic
+                if (isDefenderInRange) {
+                    for (let i = 0; i < defender.totalSubunits; i++) {
+                        if (defender.subunitHealths[i] > 0) {
+                            let targetIndex = defender.targetIndexes[i];
+                            
+                            if (targetIndex === -1 || attacker.subunitHealths[targetIndex] <= 0) {
+                                targetIndex = findNewTarget(attacker.subunitHealths);
+                                defender.targetIndexes[i] = targetIndex;
+                                if (defender.isBeamWeapon) {
+                                    defender.damageRampTimers[i] = 0;
+                                }
+                            }
+                            
+                            if (targetIndex !== -1) {
+                                const canDamageAttacker = !(attacker.undergroundMovement && attackerIsMoving);
+
+                                if (canDamageAttacker) {
+                                    if (defender.isBeamWeapon) {
+                                        defender.damageRampTimers[i] += timeStep;
+                                        let damagePerTick = calculateBeamDamage(defender, defender.damageRampTimers[i]) * timeStep;
+                                        performAttack(defender, attacker, targetIndex, damagePerTick, timeStep);
+                                    } else {
+                                        defender.timeToFire[i] += timeStep;
+                                        if (defender.timeToFire[i] >= defender.frequency) {
+                                            if (defender.name === 'Raiden') {
+                                                const targets = findMultipleTargets(attacker.subunitHealths, 3);
+                                                targets.forEach(idx => {
+                                                    if (idx !== -1) {
+                                                        performAttack(defender, attacker, idx, defender.damage, timeStep);
+                                                    }
+                                                });
+                                            } else {
+                                                performAttack(defender, attacker, targetIndex, defender.damage, timeStep);
+                                            }
+                                            defender.timeToFire[i] = 0;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                debugLog.push({
+                    time: time.toFixed(2),
+                    attackerSubunits: attacker.subunits,
+                    defenderSubunits: defender.subunits,
+                    distance: distance.toFixed(2)
+                });
+
+
+                // Check for win/loss conditions
+                if (attacker.subunits === 0 || defender.subunits === 0) {
+                    break;
+                }
+
+                time += timeStep;
+                if (time > 1000) break;
+            }
+            
+            const battleResult = getResult(attacker.subunits > 0 ? attacker : defender, attacker.subunits > 0 ? defender : attacker, time, initialDistance);
+            
+            // Attach the debug log to the result
+            battleResult.debugLog = debugLog; 
+            
+            return battleResult;
+        }
+        
+function displayResults(results) {
+    const tableData = results.map(result => {
+        let winnerClass = result.winner === result.attacker ? 'winner' : (result.winner === result.defender ? 'winner' : 'draw');
+        if (result.winner === 'Draw') {
+            winnerClass = 'draw';
+        }
+        const timeDisplay = result.isNoContest ? 'No Contest' : `${result.time} s`;
+        return {
+            attacker: result.attacker,
+            defender: result.defender,
+            winner: result.winner,
+            winnerClass: winnerClass,
+            survivalRatio: result.survivalRatio,
+            survivedSubunits: result.winnerSubunits,
+            time: timeDisplay,
+            startingDistance: result.startingDistance,
+            debugLog: result.debugLog
+        };
+    });
+
+    const table = new Tabulator("#resultsTable", {
+        data: tableData,
+        layout: "fitDataStretch",
+        columns: [
+            // This entire object defines the first column
+            {
+                title:  "Log",
+                formatter: function(cell, formatterParams, onRendered) {
+                    const rowData = cell.getRow().getData();
+                    if (rowData.debugLog && rowData.debugLog.length > 0) {
+                        return '<i class="toggle-button" style="cursor: pointer;">▶</i>';
+                    } else {
+                        return '';
+                    }
+                },
+                width: 40,
+                minWidth: 40,
+                hozAlign: "center",
+                resizable: false,
+                headerSort: false,
+                // The cellClick event must be inside the column's object
+                cellClick: function(e, cell) {
+                    const row = cell.getRow();
+                    const tableHolder = row.getElement().querySelector('.nested-table-holder');
+                    if (tableHolder) {
+                        const isVisible = tableHolder.style.display !== 'none';
+                        tableHolder.style.display = isVisible ? 'none' : '';
+                        cell.getElement().querySelector('.toggle-button').textContent = isVisible ? '▶' : '▼';
+                    }
+                }
+            },
+            {title: "Attacker", field: "attacker", sorter: "string", headerFilter: "input"},
+            {title: "Defender", field: "defender", sorter: "string", headerFilter: "input"},
+            {title: "Winner", field: "winner", sorter: "string", formatter: function(cell) {
+                const rowData = cell.getRow().getData();
+                const winner = cell.getValue();
+                const winnerClass = rowData.winnerClass;
+                return `<span class="${winnerClass}">${winner}</span>`;
+            }, headerFilter: "input"},
+            {title: "Survival Ratio (%)", field: "survivalRatio", sorter: "number"},
+            {title: "Survived Subunits", field: "survivedSubunits", sorter: "number"},
+            {title: "Starting Distance", field: "startingDistance", sorter: "number"},
+            {title: "Time", field: "time", sorter: "string"}
+        ],
+        rowFormatter: function(row) {
+            const data = row.getData();
+            if (data.debugLog && data.debugLog.length > 0) {
+                const tableHolder = document.createElement("div");
+                tableHolder.className = 'nested-table-holder';
+                tableHolder.style.cssText = "padding: 10px; background-color: #f5f5f5; display: none;";
+                const subTable = document.createElement("div");
+                tableHolder.appendChild(subTable);
+                row.getElement().appendChild(tableHolder);
+
+                new Tabulator(subTable, {
+                    data: data.debugLog,
+                    layout: "fitColumns",
+                    columns: [
+                        {title: "Time", field: "time"},
+                        {title: "Attacker Subunits", field: "attackerSubunits"},
+                        {title: "Defender Subunits", field: "defenderSubunits"},
+                        {title: "Distance", field: "distance"}
+                    ]
+                });
+            }
+        }
+    });
+}
+        // Keep this at the very end of the <script> block, after all functions are defined
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const startButton = document.getElementById('startButton');
+            if (startButton) {
+                startButton.addEventListener('click', startSimulation);
+            }
+        });
+    </script>
+</body>
+</html>
