@@ -79,7 +79,7 @@
 </head>
 <body>
     <div class="container">
-        <div id="version-number">Version 1.3</div>
+        <div id="version-number">Version 1.3a</div>
         <h1>Clearly and Rask's Mechabellum Unit Combat Simulator</h1>
         <p style="text-align: center;">Simulating every unit against every other unit.</p>
         <div class="controls">
@@ -112,8 +112,8 @@
             {name: 'Phoenix', health: 1420, armor: 0, damage: 2892, frequency: 3.4, range: 120, splashRadius: 0, speed: 16, totalSubunits: 2, depth: 10, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
             {name: 'Phantom Ray', health: 3412, armor: 0, damage: 1087, frequency: 3, range: 65, splashRadius: 3, speed: 16, totalSubunits: 3, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
             {name: 'Wraith', health: 14551, armor: 0, damage: 392, frequency: 1.6, range: 60, splashRadius: 8, speed: 10, totalSubunits: 1, depth: 15, width: 24, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
-            {name: 'Scropion', health: 18632, armor: 0, damage: 10650, frequency: 4.5, range: 100, splashRadius: 15, speed: 7, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
-            {name: 'Farseer', health: 11991, armor: 0, damage: 1348, frequency: 2, range: 125, splashRadius: 8, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
+            {name: 'Scorpion', health: 18632, armor: 0, damage: 10650, frequency: 4.5, range: 100, splashRadius: 15, speed: 7, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
+            {name: 'Farseer', health: 11991, armor: 0, damage: 1348, frequency: 2, range: 125, splashRadius: 8, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
             {name: 'Vulcan', health: 33566, armor: 0, damage: 88, frequency: 0.1, range: 95, splashRadius: 15, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 400},
             {name: 'Melting Point', health: 30907, armor: 0, damage: 0, frequency: 0.2, range: 115, splashRadius: 3, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: true, isBeamWeapon: true, minDamage: 2, maxDamage: 7952, rampUpTime: 6, undergroundMovement:false, cost: 400},
             {name: 'Fortress', health: 43938, armor: 0, damage: 6524, frequency: 1.8, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 400},
@@ -124,7 +124,7 @@
             {name: 'Abyss', health: 66955, armor: 0, damage: 3859, frequency: 4, range: 100, splashRadius: 10, speed: 10, totalSubunits: 1, depth: 35, width: 56, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 800},
             {name: 'Mountain', health: 136657, armor: 0, damage: 5899, frequency: 2, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 800},
             {name: 'Fire Badger', health: 5184, armor: 0, damage: 28, frequency: 0.1, range: 60, splashRadius: 9, speed: 10, totalSubunits: 3, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
-            {name: 'Typhoon', health: 9529, armor: 0, damage: 88, frequency: 0.2, range: 100, splashRadius: 5, speed: 9, totalSubunits: 1, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300}
+            {name: 'Typhoon', health: 9529, armor: 0, damage: 88, frequency: 0.2, range: 100, splashRadius: 5, speed: 9, totalSubunits: 1, depth: 10, width: 32, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300}
         ];
         
         function startSimulation() {
@@ -331,8 +331,8 @@
                     distance = Math.max(0, distance - defender.speed * timeStep);
                 }
                 
-                // Attacker Attack Logic
-                if (isAttackerInRange) {
+                // Attacker Attack Logic - In range and a type of unit it can attack
+                if (isAttackerInRange && !attackerCantAttackFlier) {
                     for (let i = 0; i < attacker.totalSubunits; i++) {
                         if (attacker.subunitHealths[i] > 0) {
                             let targetIndex = attacker.targetIndexes[i];
@@ -373,8 +373,8 @@
                     }
                 }
 
-                // Defender Attack Logic
-                if (isDefenderInRange) {
+                // Defender Attack Logic - In range and a type of unit it can attack
+                if (isDefenderInRange && !defenderCantAttackFlier) {
                     for (let i = 0; i < defender.totalSubunits; i++) {
                         if (defender.subunitHealths[i] > 0) {
                             let targetIndex = defender.targetIndexes[i];                           
@@ -446,8 +446,8 @@
                 let winnerStyle = '';
                 if (result.winner === result.attacker) {
                     winnerStyle = 'color: #27ae60; font-weight: bold;'; // green
-                } else if (result.winner === defenderCanonical) {
-                    winnerStyle = 'color:#c0392b;font-weight:bold;'; // red
+                } else {
+                    winnerStyle = 'color: #c0392b; font-weight: bold;'; // red
                 }
                 // Counter: attacker wins AND (survival > 50% OR time < 13.58s)
                 let isCounter = false;
@@ -464,6 +464,7 @@
                     defenderCanonical: defenderCanonical,
                     winner: result.winner,
                     winnerClass: winnerClass,
+                    winnerStyle: winnerStyle,
                     survivalRatio: result.survivalRatio,
                     survivedSubunits: result.winnerSubunits,
                     time: timeDisplay,
