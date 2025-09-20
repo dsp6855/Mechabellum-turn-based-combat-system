@@ -79,11 +79,12 @@
 </head>
 <body>
     <div class="container">
-        <div id="version-number">Version 1.2</div>
+        <div id="version-number">Version 1.3</div>
         <h1>Clearly and Rask's Mechabellum Unit Combat Simulator</h1>
         <p style="text-align: center;">Simulating every unit against every other unit.</p>
         <div class="controls">
             <button id="startButton">Start Simulation</button>
+            <span id="sim-spinner" style="display:none; margin-left:10px;"></span>
         </div>
         <div id="resultsTable"></div>
     </div>
@@ -93,58 +94,77 @@
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
     <script>
         const unitData = [
-            {name: 'Crawler', health: 263, armor: 0, damage: 79, frequency: 0.6, range: 0, splashRadius: 0, speed: 16, totalSubunits: 24, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Fang', health: 117, armor: 0, damage: 63, frequency: 1.5, range: 75, splashRadius: 0, speed: 6, totalSubunits: 18, depth: 10, width: 40, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Hound', health: 897, armor: 0, damage: 246, frequency: 2.4, range: 70, splashRadius: 6, speed: 10, totalSubunits: 5, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Void Eye', health: 1509, armor: 0, damage: 1008, frequency: 3.2, range: 100, splashRadius: 0, speed: 8, totalSubunits: 3, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Arclight', health: 4813, armor: 0, damage: 347, frequency: 0.9, range: 95, splashRadius: 7, speed: 7, totalSubunits: 1, depth: 10, width: 16, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Marksman', health: 1622, armor: 0, damage: 2329, frequency: 3.1, range: 140, splashRadius: 0, speed: 8, totalSubunits: 1, depth: 10, width: 16, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Mustang', health: 343, armor: 0, damage: 36, frequency: 0.4, range: 95, splashRadius: 0, speed: 16, totalSubunits: 12, depth: 10, width: 40, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Sledgehammer', health: 3478, armor: 0, damage: 608, frequency: 4.5, range: 95, splashRadius: 5, speed: 7, totalSubunits: 5, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Stormcaller', health: 1149, armor: 0, damage: 772, frequency: 6.6, range: 180, splashRadius: 5.5, speed: 6, totalSubunits: 4, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Steel Ball', health: 4571, armor: 0, damage: 0, frequency: 0.2, range: 45, splashRadius: 0, speed: 16, totalSubunits: 4, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: true, minDamage: 2, maxDamage: 2605, rampUpTime: 6, undergroundMovement:false},
-            {name: 'Sabertooth', health: 15541, armor: 0, damage: 7858, frequency: 3.4, range: 95, splashRadius: 5, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Tarantula', health: 13273, armor: 0, damage: 496, frequency: 0.6, range: 80, splashRadius: 5, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Rhino', health: 19297, armor: 0, damage: 3560, frequency: 0.9, range: 0, splashRadius: 6, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Hacker', health: 3249, armor: 0, damage: 585, frequency: 0.3, range: 110, splashRadius: 0, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Wasp', health: 311, armor: 0, damage: 202, frequency: 1.4, range: 50, splashRadius: 0, speed: 16, totalSubunits: 12, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Phoenix', health: 1420, armor: 0, damage: 2892, frequency: 3.4, range: 120, splashRadius: 0, speed: 16, totalSubunits: 2, depth: 10, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Phantom Ray', health: 3412, armor: 0, damage: 1087, frequency: 3, range: 65, splashRadius: 3, speed: 16, totalSubunits: 3, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Wraith', health: 14551, armor: 0, damage: 392, frequency: 1.6, range: 60, splashRadius: 8, speed: 10, totalSubunits: 1, depth: 15, width: 24, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Scropion', health: 18632, armor: 0, damage: 10650, frequency: 4.5, range: 100, splashRadius: 15, speed: 7, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Farseer', health: 11991, armor: 0, damage: 1348, frequency: 2, range: 125, splashRadius: 8, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Vulcan', health: 33566, armor: 0, damage: 88, frequency: 0.1, range: 95, splashRadius: 15, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Melting Point', health: 30907, armor: 0, damage: 0, frequency: 0.2, range: 115, splashRadius: 3, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: true, isBeamWeapon: true, minDamage: 2, maxDamage: 7952, rampUpTime: 6, undergroundMovement:false},
-            {name: 'Fortress', health: 43938, armor: 0, damage: 6524, frequency: 1.8, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Sandworm', health: 48645, armor: 0, damage: 9352, frequency: 2.5, range: 0, splashRadius: 12, speed: 16, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:true},
-            {name: 'Raiden', health: 18349, armor: 0, damage: 5570, frequency: 4.6, range: 110, splashRadius: 0, speed: 10, totalSubunits: 1, depth: 20, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Overlord', health: 20323, armor: 0, damage: 4474, frequency: 4.6, range: 120, splashRadius: 7, speed: 10, totalSubunits: 1, depth: 25, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'War Factory', health: 113593, armor: 0, damage: 7520, frequency: 1.8, range: 100, splashRadius: 4.5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Abyss', health: 66955, armor: 0, damage: 3859, frequency: 4, range: 100, splashRadius: 10, speed: 10, totalSubunits: 1, depth: 35, width: 56, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Mountain', health: 136657, armor: 0, damage: 5899, frequency: 2, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Fire Badger', health: 5184, armor: 0, damage: 28, frequency: 0.1, range: 60, splashRadius: 9, speed: 10, totalSubunits: 3, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false},
-            {name: 'Typhoon', health: 9529, armor: 0, damage: 88, frequency: 0.2, range: 100, splashRadius: 5, speed: 9, totalSubunits: 1, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false}
-        ];   
+            {name: 'Crawler', health: 263, armor: 0, damage: 79, frequency: 0.6, range: 0, splashRadius: 0, speed: 16, totalSubunits: 24, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 100},
+            {name: 'Fang', health: 117, armor: 0, damage: 63, frequency: 1.5, range: 75, splashRadius: 0, speed: 6, totalSubunits: 18, depth: 10, width: 40, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 100},
+            {name: 'Hound', health: 897, armor: 0, damage: 246, frequency: 2.4, range: 70, splashRadius: 6, speed: 10, totalSubunits: 5, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 100},
+            {name: 'Void Eye', health: 1509, armor: 0, damage: 1008, frequency: 3.2, range: 100, splashRadius: 0, speed: 8, totalSubunits: 3, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 100},
+            {name: 'Arclight', health: 4813, armor: 0, damage: 347, frequency: 0.9, range: 95, splashRadius: 7, speed: 7, totalSubunits: 1, depth: 10, width: 16, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 100},
+            {name: 'Marksman', health: 1622, armor: 0, damage: 2329, frequency: 3.1, range: 140, splashRadius: 0, speed: 8, totalSubunits: 1, depth: 10, width: 16, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 100},
+            {name: 'Mustang', health: 343, armor: 0, damage: 36, frequency: 0.4, range: 95, splashRadius: 0, speed: 16, totalSubunits: 12, depth: 10, width: 40, isFlier: false, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Sledgehammer', health: 3478, armor: 0, damage: 608, frequency: 4.5, range: 95, splashRadius: 5, speed: 7, totalSubunits: 5, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Stormcaller', health: 1149, armor: 0, damage: 772, frequency: 6.6, range: 180, splashRadius: 5.5, speed: 6, totalSubunits: 4, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Steel Ball', health: 4571, armor: 0, damage: 0, frequency: 0.2, range: 45, splashRadius: 0, speed: 16, totalSubunits: 4, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: true, minDamage: 2, maxDamage: 2605, rampUpTime: 6, undergroundMovement:false, cost: 200},
+            {name: 'Sabertooth', health: 15541, armor: 0, damage: 7858, frequency: 3.4, range: 95, splashRadius: 5, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Tarantula', health: 13273, armor: 0, damage: 496, frequency: 0.6, range: 80, splashRadius: 5, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Rhino', health: 19297, armor: 0, damage: 3560, frequency: 0.9, range: 0, splashRadius: 6, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Hacker', health: 3249, armor: 0, damage: 585, frequency: 0.3, range: 110, splashRadius: 0, speed: 8, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Wasp', health: 311, armor: 0, damage: 202, frequency: 1.4, range: 50, splashRadius: 0, speed: 16, totalSubunits: 12, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Phoenix', health: 1420, armor: 0, damage: 2892, frequency: 3.4, range: 120, splashRadius: 0, speed: 16, totalSubunits: 2, depth: 10, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Phantom Ray', health: 3412, armor: 0, damage: 1087, frequency: 3, range: 65, splashRadius: 3, speed: 16, totalSubunits: 3, depth: 10, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Wraith', health: 14551, armor: 0, damage: 392, frequency: 1.6, range: 60, splashRadius: 8, speed: 10, totalSubunits: 1, depth: 15, width: 24, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
+            {name: 'Scropion', health: 18632, armor: 0, damage: 10650, frequency: 4.5, range: 100, splashRadius: 15, speed: 7, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
+            {name: 'Farseer', health: 11991, armor: 0, damage: 1348, frequency: 2, range: 125, splashRadius: 8, speed: 16, totalSubunits: 1, depth: 15, width: 24, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300},
+            {name: 'Vulcan', health: 33566, armor: 0, damage: 88, frequency: 0.1, range: 95, splashRadius: 15, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 400},
+            {name: 'Melting Point', health: 30907, armor: 0, damage: 0, frequency: 0.2, range: 115, splashRadius: 3, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: true, isBeamWeapon: true, minDamage: 2, maxDamage: 7952, rampUpTime: 6, undergroundMovement:false, cost: 400},
+            {name: 'Fortress', health: 43938, armor: 0, damage: 6524, frequency: 1.8, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 400},
+            {name: 'Sandworm', health: 48645, armor: 0, damage: 9352, frequency: 2.5, range: 0, splashRadius: 12, speed: 16, totalSubunits: 1, depth: 20, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:true, cost: 400},
+            {name: 'Raiden', health: 18349, armor: 0, damage: 5570, frequency: 4.6, range: 110, splashRadius: 0, speed: 10, totalSubunits: 1, depth: 20, width: 32, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 400},
+            {name: 'Overlord', health: 20323, armor: 0, damage: 4474, frequency: 4.6, range: 120, splashRadius: 7, speed: 10, totalSubunits: 1, depth: 25, width: 40, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 500},
+            {name: 'War Factory', health: 113593, armor: 0, damage: 7520, frequency: 1.8, range: 100, splashRadius: 4.5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 800},
+            {name: 'Abyss', health: 66955, armor: 0, damage: 3859, frequency: 4, range: 100, splashRadius: 10, speed: 10, totalSubunits: 1, depth: 35, width: 56, isFlier: true, canAttackFliers: true, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 800},
+            {name: 'Mountain', health: 136657, armor: 0, damage: 5899, frequency: 2, range: 100, splashRadius: 5, speed: 6, totalSubunits: 1, depth: 35, width: 56, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 800},
+            {name: 'Fire Badger', health: 5184, armor: 0, damage: 28, frequency: 0.1, range: 60, splashRadius: 9, speed: 10, totalSubunits: 3, depth: 10, width: 40, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 200},
+            {name: 'Typhoon', health: 9529, armor: 0, damage: 88, frequency: 0.2, range: 100, splashRadius: 5, speed: 9, totalSubunits: 1, depth: 10, width: 32, isFlier: false, canAttackFliers: false, isBeamWeapon: false, minDamage: 0, maxDamage: 0, rampUpTime: 0, undergroundMovement:false, cost: 300}
+        ];
+        
         function startSimulation() {
-            const results = [];
-            for (let i = 0; i < unitData.length; i++) {
-                for (let j = 0; j < unitData.length; j++) {
-                    if (i === j) continue;
-                    const attackerUnit = unitData[i];
-                    const defenderUnit = unitData[j];
-                    const battleResult = simulateBattle(attackerUnit, defenderUnit);
-                    results.push({
-                        attacker: attackerUnit.name,
-                        defender: defenderUnit.name,
-                        ...battleResult
-                    });
+            // Show spinner
+            const spinner = document.getElementById('sim-spinner');
+            spinner.innerHTML = '<svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#3498db" stroke-width="5" stroke-linecap="round" stroke-dasharray="31.415, 31.415" transform="rotate(72.0001 25 25)"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg>';
+            spinner.style.display = '';
+            setTimeout(() => {
+                const results = [];
+                for (let i = 0; i < unitData.length; i++) {
+                    for (let j = 0; j < unitData.length; j++) {
+                        if (i === j) continue;
+                        const attackerUnit = unitData[i];
+                        const defenderUnit = unitData[j];
+                        let defenderMultiplier = 1;
+                        let defenderNameDisplay = defenderUnit.name;
+                        if (attackerUnit.cost > defenderUnit.cost) {
+                            defenderMultiplier = Math.floor(attackerUnit.cost / defenderUnit.cost);
+                            if (defenderMultiplier < 1) defenderMultiplier = 1;
+                            defenderNameDisplay = defenderUnit.name + (defenderMultiplier > 1 ? `*${defenderMultiplier}` : '');
+                        }
+                        const visualDefender = defenderMultiplier > 1
+                            ? { ...defenderUnit, totalSubunits: defenderUnit.totalSubunits * defenderMultiplier, cost: defenderUnit.cost * defenderMultiplier }
+                            : defenderUnit;
+                        const battleResult = simulateBattle(attackerUnit, visualDefender);
+                        results.push({
+                            attacker: attackerUnit.name,
+                            defender: defenderNameDisplay,
+                            defenderMultiplier: defenderMultiplier,
+                            ...battleResult
+                        });
+                    }
                 }
-            }
-            displayResults(results);
+                displayResults(results);
+                spinner.style.display = 'none';
+            }, 50);
         }
 
         function createUnit(unitType) {
-            let initialTimeToFire;
+                        let initialTimeToFire;
             
             // All units except the Sandworm attack immediately.
             // Setting their timer to frequency allows the loop's check to pass on the first frame.
@@ -232,7 +252,7 @@
                 }
             }
         }
-        
+
         // A function to find the index of a new, alive target
         function findNewTarget(subunitHealths) {
             for (let i = 0; i < subunitHealths.length; i++) {
@@ -269,12 +289,15 @@
             };
         }
         function simulateBattle(attackerType, defenderType) {
-            const attackerCannotAttack = attackerType.isFlier && !defenderType.canAttackFliers && !defenderType.isFlier;
-            const defenderCannotAttack = !attackerType.isFlier && defenderType.isFlier && !attackerType.canAttackFliers;            
+            const defenderCantAttackFlier = attackerType.isFlier && !defenderType.canAttackFliers && !defenderType.isFlier;
+            const attackerCantAttackFlier = !attackerType.isFlier && defenderType.isFlier && !attackerType.canAttackFliers;
             const initialDistance = Math.max(attackerType.range, defenderType.range) + 1;
 
-            if (attackerCannotAttack || defenderCannotAttack) {
-                const winnerType = attackerCannotAttack ? attackerType : defenderType;
+            // Special case: attacker is a air unit and defender attack air, we still calculate how long it takes for attacker to kill this unit for checking counters
+            //Otherwise if we find if the attacker can't attack the defending air unit, we skip over the logic and return no contest
+            if (attackerCantAttackFlier) {
+                // Ground unit attacking air unit it cannot hit: still no contest
+                const winnerType = defenderType;
                 return {
                     winner: winnerType.name,
                     time: 0,
@@ -286,7 +309,7 @@
             }
 
             let attacker = createUnit(attackerType);
-            let defender = createUnit(defenderType);            
+            let defender = createUnit(defenderType);
             let time = 0;
             const timeStep = 0.1;
             let distance = initialDistance;
@@ -411,99 +434,152 @@
             return battleResult;
         }
         
-function displayResults(results) {
-    const tableData = results.map(result => {
-        let winnerClass = result.winner === result.attacker ? 'winner' : (result.winner === result.defender ? 'winner' : 'draw');
-        if (result.winner === 'Draw') {
-            winnerClass = 'draw';
-        }
-        const timeDisplay = result.isNoContest ? 'No Contest' : `${result.time} s`;
-        return {
-            attacker: result.attacker,
-            defender: result.defender,
-            winner: result.winner,
-            winnerClass: winnerClass,
-            survivalRatio: result.survivalRatio,
-            survivedSubunits: result.winnerSubunits,
-            time: timeDisplay,
-            startingDistance: result.startingDistance,
-            debugLog: result.debugLog
-        };
-    });
+        function displayResults(results) {
+            const COUNTER_TIME = 13.58; //Previously calculated average time it takes for 1 unit to kill another
+            const tableData = results.map(result => {
+                // Extract canonical defender name (remove multiplier)
+                const match = result.defender.match(/^(.*?)(\*\d+)?$/);
+                const defenderCanonical = match ? match[1] : result.defender;
+                let timeDisplay = result.isNoContest ? 'No Contest' : `${result.time} s`;
+                // Winner color logic: green for attacker win, yellow for uncontested air win, red for defender win
+                let winnerClass = 'winner';
+                let winnerStyle = '';
+                if (result.winner === result.attacker) {
+                    winnerStyle = 'color: #27ae60; font-weight: bold;'; // green
+                } else if (result.winner === defenderCanonical) {
+                    winnerStyle = 'color:#c0392b;font-weight:bold;'; // red
+                }
+                // Counter: attacker wins AND (survival > 50% OR time < 13.58s)
+                let isCounter = false;
+                if (
+                    result.winner === result.attacker &&
+                    !result.isNoContest &&
+                    (parseFloat(result.survivalRatio) > 50 && parseFloat(result.time) < COUNTER_TIME)
+                ) {
+                    isCounter = true;
+                }
+                return {
+                    attacker: result.attacker,
+                    defender: result.defender,
+                    defenderCanonical: defenderCanonical,
+                    winner: result.winner,
+                    winnerClass: winnerClass,
+                    survivalRatio: result.survivalRatio,
+                    survivedSubunits: result.winnerSubunits,
+                    time: timeDisplay,
+                    startingDistance: result.startingDistance,
+                    isCounter: isCounter,
+                    debugLog: result.debugLog
+                };
+            });
 
-    const table = new Tabulator("#resultsTable", {
-        data: tableData,
-        layout: "fitDataStretch",
-        columns: [
-            // This entire object defines the first column
-            {
-                title:  "Log",
-                formatter: function(cell, formatterParams, onRendered) {
-                    const rowData = cell.getRow().getData();
-                    if (rowData.debugLog && rowData.debugLog.length > 0) {
-                        return '<i class="toggle-button" style="cursor: pointer;">▶</i>';
-                    } else {
-                        return '';
-                    }
-                },
-                width: 40,
-                minWidth: 40,
-                hozAlign: "center",
-                resizable: false,
-                headerSort: false,
-                // The cellClick event must be inside the column's object
-                cellClick: function(e, cell) {
-                    const row = cell.getRow();
-                    const tableHolder = row.getElement().querySelector('.nested-table-holder');
-                    if (tableHolder) {
-                        const isVisible = tableHolder.style.display !== 'none';
-                        tableHolder.style.display = isVisible ? 'none' : '';
-                        cell.getElement().querySelector('.toggle-button').textContent = isVisible ? '▶' : '▼';
+            const table = new Tabulator("#resultsTable", {
+                data: tableData,
+                layout: "fitDataStretch",
+                columns: [
+                    // This entire object defines the first column
+                    {
+                        title:  "Log",
+                        formatter: function(cell, formatterParams, onRendered) {
+                            const rowData = cell.getRow().getData();
+                            if (rowData.debugLog && rowData.debugLog.length > 0) {
+                                return '<i class="toggle-button" style="cursor: pointer;">▶</i>';
+                            } else {
+                                return '';
+                            }
+                        },
+                        width: 40,
+                        minWidth: 40,
+                        hozAlign: "center",
+                        resizable: false,
+                        headerSort: false,
+                        // The cellClick event must be inside the column's object
+                        cellClick: function(e, cell) {
+                            const row = cell.getRow();
+                            const tableHolder = row.getElement().querySelector('.nested-table-holder');
+                            if (tableHolder) {
+                                const isVisible = tableHolder.style.display !== 'none';
+                                tableHolder.style.display = isVisible ? 'none' : '';
+                                cell.getElement().querySelector('.toggle-button').textContent = isVisible ? '▶' : '▼';
+                            }
+                        }
+                    },
+                    {title: "Attacker", field: "attacker", sorter: "string", headerFilter: "input"},
+                    {title: "Defender", field: "defender", sorter: "string", headerFilter: "input"},
+                    {title: "Winner", field: "winner", sorter: "string", formatter: function(cell) {
+                        const rowData = cell.getRow().getData();
+                        const winner = cell.getValue();
+                        const winnerClass = rowData.winnerClass;
+                        return `<span class="${winnerClass}">${winner}</span>`;
+                    }, headerFilter: "input"},
+                    {title: "Survival Ratio (%)", field: "survivalRatio", sorter: "number"},
+                    {title: "Survived Subunits", field: "survivedSubunits", sorter: "number"},
+                    {title: "Starting Distance", field: "startingDistance", sorter: "number"},
+                    {title: "Time", field: "time", sorter: "string"},
+                    {title: "Counter", field: "isCounter", sorter: "boolean", formatter: function(cell) {
+                        return cell.getValue() ? '✅' : '';
+                    }}
+                ],
+                rowFormatter: function(row) {
+                    const data = row.getData();
+                    if (data.debugLog && data.debugLog.length > 0) {
+                        const tableHolder = document.createElement("div");
+                        tableHolder.className = 'nested-table-holder';
+                        tableHolder.style.cssText = "padding: 10px; background-color: #f5f5f5; display: none;";
+                        const subTable = document.createElement("div");
+                        tableHolder.appendChild(subTable);
+                        row.getElement().appendChild(tableHolder);
+
+                        new Tabulator(subTable, {
+                            data: data.debugLog,
+                            layout: "fitColumns",
+                            columns: [
+                                {title: "Time", field: "time"},
+                                {title: "Attacker Subunits", field: "attackerSubunits"},
+                                {title: "Defender Subunits", field: "defenderSubunits"},
+                                {title: "Distance", field: "distance"}
+                            ]
+                        });
                     }
                 }
-            },
-            {title: "Attacker", field: "attacker", sorter: "string", headerFilter: "input"},
-            {title: "Defender", field: "defender", sorter: "string", headerFilter: "input"},
-            {title: "Winner", field: "winner", sorter: "string", formatter: function(cell) {
-                const rowData = cell.getRow().getData();
-                const winner = cell.getValue();
-                const winnerClass = rowData.winnerClass;
-                return `<span class="${winnerClass}">${winner}</span>`;
-            }, headerFilter: "input"},
-            {title: "Survival Ratio (%)", field: "survivalRatio", sorter: "number"},
-            {title: "Survived Subunits", field: "survivedSubunits", sorter: "number"},
-            {title: "Starting Distance", field: "startingDistance", sorter: "number"},
-            {title: "Time", field: "time", sorter: "string"}
-        ],
-        rowFormatter: function(row) {
-            const data = row.getData();
-            if (data.debugLog && data.debugLog.length > 0) {
-                const tableHolder = document.createElement("div");
-                tableHolder.className = 'nested-table-holder';
-                tableHolder.style.cssText = "padding: 10px; background-color: #f5f5f5; display: none;";
-                const subTable = document.createElement("div");
-                tableHolder.appendChild(subTable);
-                row.getElement().appendChild(tableHolder);
+            });
+             // Place the event listener here, after the table is defined
+            document.getElementById('export-button').addEventListener('click', function() {
+                table.download("csv", "battle_results.csv");
+            });
+            
+            // --- Output countersData object below the table ---
+            // Build countersData: { unit: { weakness: [..], strong_counter: [..] } }
+            // Use canonical names for all units
+            const allUnits = Array.from(new Set([
+                ...tableData.map(r => r.attacker),
+                ...tableData.map(r => r.defenderCanonical)
+            ]));
+            const countersData = {};
+            allUnits.forEach(unit => {
+                // Weakness: units that are counters to this unit
+                const weakness = tableData
+                    .filter(r => r.defenderCanonical === unit && r.isCounter)
+                    .map(r => r.attacker)
+                    .filter((v, i, a) => a.indexOf(v) === i);
+                // Strong counter: units this unit is a counter against
+                const strong_counter = tableData
+                    .filter(r => r.attacker === unit && r.isCounter)
+                    .map(r => r.defenderCanonical)
+                    .filter((v, i, a) => a.indexOf(v) === i);
+                countersData[unit] = { weakness, strong_counter };
+            });
 
-                new Tabulator(subTable, {
-                    data: data.debugLog,
-                    layout: "fitColumns",
-                    columns: [
-                        {title: "Time", field: "time"},
-                        {title: "Attacker Subunits", field: "attackerSubunits"},
-                        {title: "Defender Subunits", field: "defenderSubunits"},
-                        {title: "Distance", field: "distance"}
-                    ]
-                });
-            }
+            // Render below the table
+            let output = '<h3 style="margin-top:2em;">countersData = {<br>';
+            Object.entries(countersData).forEach(([unit, obj]) => {
+                output += `&nbsp;&nbsp;"${unit}": { "weakness": [${obj.weakness.map(u => `\"${u}\"`).join(', ')}], "strong_counter": [${obj.strong_counter.map(u => `\"${u}\"`).join(', ')}] },<br>`;
+            });
+            output += '};</h3>';
+            const div = document.createElement('div');
+            div.innerHTML = output;
+            document.querySelector('.container').appendChild(div);
         }
-    });
-    // Place the event listener here, after the table is defined
-    document.getElementById('export-button').addEventListener('click', function() {
-        table.download("csv", "battle_results.csv");
-    });
-
-}
         // Keep this at the very end of the <script> block, after all functions are defined
         document.addEventListener('DOMContentLoaded', (event) => {
             const startButton = document.getElementById('startButton');
