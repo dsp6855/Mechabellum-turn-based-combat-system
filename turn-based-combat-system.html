@@ -79,7 +79,7 @@
 </head>
 <body>
     <div class="container">
-        <div id="version-number">Version 1.3a</div>
+        <div id="version-number">Version 1.4</div>
         <h1>Clearly and Rask's Mechabellum Unit Combat Simulator</h1>
         <p style="text-align: center;">Simulating every unit against every other unit.</p>
         <div class="controls">
@@ -184,12 +184,21 @@
                 damageRampTimers: Array(unitType.totalSubunits).fill(0),
                 targetIndexes: Array(unitType.totalSubunits).fill(-1),
                 initialHealth: unitType.totalSubunits * unitType.health,
+                shotCounts: new Array(unitType.totalSubunits).fill(0),
             };
         }
 
-        function calculateBeamDamage(unit, timeFiring) {
-            const damagePerSecond = (unit.maxDamage - unit.minDamage) / unit.rampUpTime;
-            const currentDamage = unit.minDamage + (damagePerSecond * timeFiring);
+        function calculateBeamDamage(unit, rampUpTimer) {
+            if (unit.rampUpTime <= 0) {
+                return unit.maxDamage; // Avoid division by zero
+            }
+            
+            // Calculate damage increase based on time, not shots
+            const damageIncreasePerSecond = (unit.maxDamage - unit.minDamage) / unit.rampUpTime;
+            
+            // The damage is the minimum of max damage and the damage at the current time
+            const currentDamage = unit.minDamage + (damageIncreasePerSecond * rampUpTimer);
+            
             return Math.min(unit.maxDamage, currentDamage);
         }
 
@@ -229,30 +238,45 @@
             }
         }
 
-        // This new function handles a single attack, including splash
-        function performAttack(attacker, defender, subunitIndex, damageToApply, timeStep) {
-            if (subunitIndex === -1) {
-                return;
-            }
-            // Apply main damage to the primary target
-            applyDamageToSubunit(defender, subunitIndex, damageToApply);           
-            // Check for splash damage
-            if (attacker.splashRadius > 0) {
-                const splashDamage = attacker.isBeamWeapon ? damageToApply : attacker.damage;
-                 // Simplified splash damage application to nearby units.
-                // The code currently targets the first 'n' available subunits.
-                const subunitsHit = Math.ceil((0.5 * Math.PI * Math.pow(attacker.splashRadius, 2)) / ((defender.depth * defender.width) / defender.totalSubunits));
-                let damagedCount = 0;
-                
-            for (let i = 0; i < defender.totalSubunits && damagedCount < subunitsHit; i++) {
-                    if (i !== subunitIndex && defender.subunitHealths[i] > 0) {
-                        applyDamageToSubunit(defender, i, splashDamage);
-                        damagedCount++;
+        function performAttack(attacker, defender, targetIndex, damageToApply, timeStep) {
+            // Check if the primary target is still alive
+            if (defender.subunitHealths[targetIndex] > 0) {
+                // Apply direct damage to the primary target
+                applyDamageToSubunit(defender, targetIndex, damageToApply);
+
+                // Check for splash damage
+                if (attacker.splashRadius > 0) {
+                    // The splash damage amount is either the ramped-up beam damage or the fixed damage
+                    const splashDamage = attacker.isBeamWeapon ? damageToApply : attacker.damage;
+
+                    const subunitsHit = Math.ceil((0.4 * Math.PI * Math.pow(attacker.splashRadius, 2)) / ((defender.depth * defender.width) / defender.totalSubunits));
+                    
+                    let damagedCount = 0;
+                    for (let i = 0; i < defender.totalSubunits && damagedCount < subunitsHit; i++) {
+                        // Ensure we don't damage the primary target twice and the subunit is alive
+                        if (i !== targetIndex && defender.subunitHealths[i] > 0) {
+                            applyDamageToSubunit(defender, i, splashDamage);
+                            damagedCount++;
+                        }
                     }
                 }
             }
         }
+        function findNearestLivingTarget(targets) {
+            let nearestIndex = -1;
+            let nearestDistance = Infinity;
+            for (let i = 0; i < targets.length; i++) {
+                // Assuming a distance calculation based on subunit position
+                // This is a placeholder; you will need to implement this part.
+                const distance = calculateSubunitDistance(i); 
 
+                if (targets[i] > 0 && distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestIndex = i;
+                }
+            }
+            return nearestIndex;
+        }
         // A function to find the index of a new, alive target
         function findNewTarget(subunitHealths) {
             for (let i = 0; i < subunitHealths.length; i++) {
@@ -288,15 +312,31 @@
                 startingDistance: initialDistance.toFixed(2)
             };
         }
+
+        function logCustomDebug(attacker, defender, time, damageThisTimeStep, totalDamageDoneByAttacker, totalDamageDoneByDefender, distance, currentAttackerBeamDamage) {
+            if (attacker.name === 'Steel Ball' && defender.name === 'Tarantula') {
+                console.log(`--- Time: ${time.toFixed(2)}s ---`);
+                console.log(`Distance: ${distance.toFixed(2)}`);
+                console.log(`Steel Ball Subunit Health: ${attacker.subunitHealths.map(h => h.toFixed(2)).join(', ')}`);
+                console.log(`Tarantula Health: ${defender.health.toFixed(2)}`);
+                console.log(`Damage Done This Time Slice (Steel Ball): ${damageThisTimeStep.attacker.toFixed(2)}`);
+                console.log(`Damage Done This Time Slice (Tarantula): ${damageThisTimeStep.defender.toFixed(2)}`);
+                console.log(`Total Damage Done By Steel Ball: ${totalDamageDoneByAttacker.toFixed(2)}`);
+                console.log(`Total Damage Done By Tarantula: ${totalDamageDoneByDefender.toFixed(2)}`);
+                console.log(`Steel Ball Per-Subunit Damage: [${currentAttackerBeamDamage.map(d => d.toFixed(2)).join(', ')}]`);
+                console.log(`--- End of Time Slice ---`);
+            }
+        }
+
         function simulateBattle(attackerType, defenderType) {
             const defenderCantAttackFlier = attackerType.isFlier && !defenderType.canAttackFliers && !defenderType.isFlier;
             const attackerCantAttackFlier = !attackerType.isFlier && defenderType.isFlier && !attackerType.canAttackFliers;
             const initialDistance = Math.max(attackerType.range, defenderType.range) + 1;
-
-            // Special case: attacker is a air unit and defender attack air, we still calculate how long it takes for attacker to kill this unit for checking counters
-            //Otherwise if we find if the attacker can't attack the defending air unit, we skip over the logic and return no contest
+            let currentAttackerBeamDamage = [];
+            let currentDefenderBeamDamage = [];
+            let totalDamageDoneByAttacker = 0;
+            let totalDamageDoneByDefender = 0;
             if (attackerCantAttackFlier) {
-                // Ground unit attacking air unit it cannot hit: still no contest
                 const winnerType = defenderType;
                 return {
                     winner: winnerType.name,
@@ -313,15 +353,21 @@
             let time = 0;
             const timeStep = 0.1;
             let distance = initialDistance;
-            let debugLog = []; // Correct placement of the debug log array
-            
+            let debugLog = [];
+
             while (attacker.subunits > 0 && defender.subunits > 0) {
-                // Corrected Movement Logic
                 let isAttackerInRange = attacker.range >= distance;
                 let isDefenderInRange = defender.range >= distance;
-
                 let attackerIsMoving = !isAttackerInRange;
                 let defenderIsMoving = !isDefenderInRange;
+                
+                // This variable is now correctly used to track damage per time slice
+                let damageThisTimeStep = {
+                    attacker: 0,
+                    defender: 0
+                };
+                let currentAttackerBeamDamage = new Array(attacker.totalSubunits).fill(0);
+                let currentDefenderBeamDamage = new Array(defender.totalSubunits).fill(0);
 
                 if (attackerIsMoving && defenderIsMoving) {
                     distance = Math.max(0, distance - (attacker.speed + defender.speed) * timeStep);
@@ -330,109 +376,170 @@
                 } else if (defenderIsMoving) {
                     distance = Math.max(0, distance - defender.speed * timeStep);
                 }
-                
-                // Attacker Attack Logic - In range and a type of unit it can attack
-                if (isAttackerInRange && !attackerCantAttackFlier) {
-                    for (let i = 0; i < attacker.totalSubunits; i++) {
-                        if (attacker.subunitHealths[i] > 0) {
-                            let targetIndex = attacker.targetIndexes[i];
-                            
-                            if (targetIndex === -1 || defender.subunitHealths[targetIndex] <= 0) {
+
+             // --- START: ATTACKER'S CORRECTED ATTACK LOGIC ---
+            if (isAttackerInRange && !attackerCantAttackFlier) {
+                let targetedTargets = [];
+                for (let i = 0; i < attacker.totalSubunits; i++) {
+                    if (attacker.subunitHealths[i] > 0) {
+                        let targetIndex = attacker.targetIndexes[i];
+
+                        // This is the key change: only reset the timer if a NEW target is found.
+                        if (targetIndex === -1 || defender.subunitHealths[targetIndex] <= 0) {
+                            let availableTargets = defender.subunitHealths.map((health, index) => ({ health, index }))
+                                .filter(target => target.health > 0 && !targetedTargets.includes(target.index));
+
+                            if (availableTargets.length > 0) {
+                                let newTarget = findNewTarget(availableTargets.map(t => t.health));
+                                targetIndex = availableTargets[newTarget].index;
+                                attacker.targetIndexes[i] = targetIndex;
+                                targetedTargets.push(targetIndex);
+                            } else {
                                 targetIndex = findNewTarget(defender.subunitHealths);
                                 attacker.targetIndexes[i] = targetIndex;
+                            }
+
+                            if (attacker.isBeamWeapon) {
+                                attacker.damageRampTimers[i] = 0; // The reset is here now
+                            }
+                        }
+                        
+                        if (targetIndex !== -1) {
+                            const canDamageDefender = !(defender.undergroundMovement && defenderIsMoving);
+                            
+                            if (canDamageDefender) {
+                                attacker.timeToFire[i] += timeStep;
+                                
                                 if (attacker.isBeamWeapon) {
-                                    attacker.damageRampTimers[i] = 0;
+                                    // For beam weapons, always increment the ramp-up timer while firing
+                                    attacker.damageRampTimers[i] += timeStep;
                                 }
-                            }                           
-                            if (targetIndex !== -1) {
-                                const canDamageDefender = !(defender.undergroundMovement && defenderIsMoving);                                
-                                if (canDamageDefender) {
+
+                                if (attacker.timeToFire[i] >= attacker.frequency) {
+                                    attacker.timeToFire[i] = 0;
+                                    let damageToApply = attacker.damage;
+
                                     if (attacker.isBeamWeapon) {
-                                        attacker.damageRampTimers[i] += timeStep;
-                                        let damagePerTick = calculateBeamDamage(attacker, attacker.damageRampTimers[i]) * timeStep;
-                                        performAttack(attacker, defender, targetIndex, damagePerTick, timeStep);
-                                    } else {
-                                        attacker.timeToFire[i] += timeStep;
-                                        if (attacker.timeToFire[i] >= attacker.frequency) {
-                                            if (attacker.name === 'Raiden') {
-                                                const targets = findMultipleTargets(defender.subunitHealths, 3);
-                                                targets.forEach(idx => {
-                                                    if (idx !== -1) {
-                                                        performAttack(attacker, defender, idx, attacker.damage, timeStep);
-                                                    }
-                                                });
-                                            } else {
-                                                performAttack(attacker, defender, targetIndex, attacker.damage, timeStep);
+                                        damageToApply = calculateBeamDamage(attacker, attacker.damageRampTimers[i]);
+                                        // Do NOT reset the timer here
+                                        currentAttackerBeamDamage[i] = damageToApply;
+                                    }
+
+                                    if (attacker.name === 'Raiden') {
+                                        const targets = findMultipleTargets(defender.subunitHealths, 3);
+                                        targets.forEach(idx => {
+                                            if (idx !== -1) {
+                                                performAttack(attacker, defender, idx, damageToApply, timeStep);
+                                                damageThisTimeStep.attacker += damageToApply;
                                             }
-                                            attacker.timeToFire[i] = 0;
-                                        }
+                                        });
+                                    } else {
+                                        performAttack(attacker, defender, targetIndex, damageToApply, timeStep);
+                                        damageThisTimeStep.attacker += damageToApply;
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+            // --- END: ATTACKER'S CORRECTED ATTACK LOGIC ---
+            // --- START: DEFENDER'S CORRECTED ATTACK LOGIC ---
+            if (isDefenderInRange && !defenderCantAttackFlier) {
+                let targetedTargets = [];
+                for (let i = 0; i < defender.totalSubunits; i++) {
+                    if (defender.subunitHealths[i] > 0) {
+                        let targetIndex = defender.targetIndexes[i];
+                        
+                        // The key change is here for the defender
+                        if (targetIndex === -1 || attacker.subunitHealths[targetIndex] <= 0) {
+                            let availableTargets = attacker.subunitHealths.map((health, index) => ({ health, index }))
+                                .filter(target => target.health > 0 && !targetedTargets.includes(target.index));
 
-                // Defender Attack Logic - In range and a type of unit it can attack
-                if (isDefenderInRange && !defenderCantAttackFlier) {
-                    for (let i = 0; i < defender.totalSubunits; i++) {
-                        if (defender.subunitHealths[i] > 0) {
-                            let targetIndex = defender.targetIndexes[i];                           
-                            if (targetIndex === -1 || attacker.subunitHealths[targetIndex] <= 0) {
+                            if (availableTargets.length > 0) {
+                                let newTarget = findNewTarget(availableTargets.map(t => t.health));
+                                targetIndex = availableTargets[newTarget].index;
+                                defender.targetIndexes[i] = targetIndex;
+                                targetedTargets.push(targetIndex);
+                            } else {
                                 targetIndex = findNewTarget(attacker.subunitHealths);
                                 defender.targetIndexes[i] = targetIndex;
-                                if (defender.isBeamWeapon) {
-                                    defender.damageRampTimers[i] = 0;
-                                }
-                            }                            
-                            if (targetIndex !== -1) {
-                                const canDamageAttacker = !(attacker.undergroundMovement && attackerIsMoving);
+                            }
 
-                                if (canDamageAttacker) {
+                            if (defender.isBeamWeapon) {
+                                defender.damageRampTimers[i] = 0; // The reset is here now
+                            }
+                        }
+                        
+                        if (targetIndex !== -1) {
+                            const canDamageAttacker = !(attacker.undergroundMovement && attackerIsMoving);
+
+                            if (canDamageAttacker) {
+                                defender.timeToFire[i] += timeStep;
+                                
+                                if (defender.isBeamWeapon) {
+                                    // For beam weapons, always increment the ramp-up timer while firing
+                                    defender.damageRampTimers[i] += timeStep;
+                                }
+                                
+                                if (defender.timeToFire[i] >= defender.frequency) {
+                                    defender.timeToFire[i] = 0;
+                                    let damageToApply = defender.damage;
+
                                     if (defender.isBeamWeapon) {
-                                        defender.damageRampTimers[i] += timeStep;
-                                        let damagePerTick = calculateBeamDamage(defender, defender.damageRampTimers[i]) * timeStep;
-                                        performAttack(defender, attacker, targetIndex, damagePerTick, timeStep);
-                                    } else {
-                                        defender.timeToFire[i] += timeStep;
-                                        if (defender.timeToFire[i] >= defender.frequency) {
-                                            if (defender.name === 'Raiden') {
-                                                const targets = findMultipleTargets(attacker.subunitHealths, 3);
-                                                targets.forEach(idx => {
-                                                    if (idx !== -1) {
-                                                        performAttack(defender, attacker, idx, defender.damage, timeStep);
-                                                    }
-                                                });
-                                            } else {
-                                                performAttack(defender, attacker, targetIndex, defender.damage, timeStep);
+                                        damageToApply = calculateBeamDamage(defender, defender.damageRampTimers[i]);
+                                        // Do NOT reset the timer here
+                                        currentDefenderBeamDamage[i] = damageToApply;
+                                    }
+
+                                    if (defender.name === 'Raiden') {
+                                        const targets = findMultipleTargets(attacker.subunitHealths, 3);
+                                        targets.forEach(idx => {
+                                            if (idx !== -1) {
+                                                performAttack(defender, attacker, idx, damageToApply, timeStep);
+                                                damageThisTimeStep.defender += damageToApply;
                                             }
-                                            defender.timeToFire[i] = 0;
-                                        }
+                                        });
+                                    } else {
+                                        performAttack(defender, attacker, targetIndex, damageToApply, timeStep);
+                                        damageThisTimeStep.defender += damageToApply;
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+            // --- END: DEFENDER'S CORRECTED ATTACK LOGIC ---
+
+                totalDamageDoneByAttacker += damageThisTimeStep.attacker;
+                totalDamageDoneByDefender += damageThisTimeStep.defender;
+
+                // Call the debug function after both sides have attacked
+                //logCustomDebug(attacker, defender, time, damageThisTimeStep, totalDamageDoneByAttacker, totalDamageDoneByDefender, distance, currentAttackerBeamDamage);
                 debugLog.push({
                     time: time.toFixed(2),
                     attackerSubunits: attacker.subunits,
                     defenderSubunits: defender.subunits,
-                    distance: distance.toFixed(2)
+                    distance: distance.toFixed(2),
+                    damageThisTimeStep: {
+                        attacker: damageThisTimeStep.attacker.toFixed(2),
+                        defender: damageThisTimeStep.defender.toFixed(2)
+                    }
                 });
-                // Check for win/loss conditions
+                
                 if (attacker.subunits === 0 || defender.subunits === 0) {
                     break;
                 }
                 time += timeStep;
                 if (time > 1000) break;
             }
-            
-            const battleResult = getResult(attacker.subunits > 0 ? attacker : defender, attacker.subunits > 0 ? defender : attacker, time, initialDistance);          
-            // Attach the debug log to the result
-            battleResult.debugLog = debugLog;             
+
+            const battleResult = getResult(attacker.subunits > 0 ? attacker : defender, attacker.subunits > 0 ? defender : attacker, time, initialDistance);
+            battleResult.debugLog = debugLog;
             return battleResult;
         }
+ 
         
         function displayResults(results) {
             const COUNTER_TIME = 13.58; //Previously calculated average time it takes for 1 unit to kill another
@@ -538,7 +645,7 @@
                                 {title: "Time", field: "time"},
                                 {title: "Attacker Subunits", field: "attackerSubunits"},
                                 {title: "Defender Subunits", field: "defenderSubunits"},
-                                {title: "Distance", field: "distance"}
+                                {title: "Distance", field: "distance"},
                             ]
                         });
                     }
