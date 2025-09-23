@@ -79,7 +79,7 @@
 </head>
 <body>
     <div class="container">
-        <div id="version-number">Version 1.4</div>
+        <div id="version-number">Version 1.5</div>
         <h1>Clearly and Rask's Mechabellum Unit Combat Simulator</h1>
         <p style="text-align: center;">Simulating every unit against every other unit.</p>
         <div class="controls">
@@ -147,7 +147,7 @@
                             defenderNameDisplay = defenderUnit.name + (defenderMultiplier > 1 ? `*${defenderMultiplier}` : '');
                         }
                         const visualDefender = defenderMultiplier > 1
-                            ? { ...defenderUnit, totalSubunits: defenderUnit.totalSubunits * defenderMultiplier, cost: defenderUnit.cost * defenderMultiplier }
+                            ? { ...defenderUnit, totalSubunits: defenderUnit.totalSubunits * defenderMultiplier, cost: defenderUnit.cost * defenderMultiplier, width: defenderUnit.width * defenderMultiplier }
                             : defenderUnit;
                         const battleResult = simulateBattle(attackerUnit, visualDefender);
                         results.push({
@@ -248,8 +248,12 @@
                 if (attacker.splashRadius > 0) {
                     // The splash damage amount is either the ramped-up beam damage or the fixed damage
                     const splashDamage = attacker.isBeamWeapon ? damageToApply : attacker.damage;
-
-                    const subunitsHit = Math.ceil((0.4 * Math.PI * Math.pow(attacker.splashRadius, 2)) / ((defender.depth * defender.width) / defender.totalSubunits));
+                    // So half a circle is a good approximation for splash area. However we're already attacking 1 unit above so we're checking how many ADDITOINAL units
+                    // we're hitting here. Especially for small numbers of subunits we absolutely aren't hitting several units at once. A melting point IS NOT hitting 2 phantom rays with its beam.
+                    // So we're rounding down instead of up. We're also assuming all extra groups of units are lined up lengthwise along the way so we aren't so we aren't assuming 8 groups of crawlers
+                    // are sitting on top of each other when attacking a war factory. Now with bigger splashes with a ton of units, maybe it makes more sense to round up. But for small subunits, rounding
+                    // down is more accurate.
+                    const subunitsHit = Math.floor((0.5 * Math.PI * Math.pow(attacker.splashRadius, 2)) / ((defender.depth * defender.width) / defender.totalSubunits));
                     
                     let damagedCount = 0;
                     for (let i = 0; i < defender.totalSubunits && damagedCount < subunitsHit; i++) {
@@ -662,26 +666,28 @@
             const allUnits = Array.from(new Set([
                 ...tableData.map(r => r.attacker),
                 ...tableData.map(r => r.defenderCanonical)
-            ]));
+            ])).sort((a, b) => a.localeCompare(b));
             const countersData = {};
             allUnits.forEach(unit => {
                 // Weakness: units that are counters to this unit
                 const weakness = tableData
                     .filter(r => r.defenderCanonical === unit && r.isCounter)
                     .map(r => r.attacker)
-                    .filter((v, i, a) => a.indexOf(v) === i);
+                    .filter((v, i, a) => a.indexOf(v) === i)
+                    .sort((x, y) => x.localeCompare(y));
                 // Strong counter: units this unit is a counter against
                 const strong_counter = tableData
                     .filter(r => r.attacker === unit && r.isCounter)
                     .map(r => r.defenderCanonical)
-                    .filter((v, i, a) => a.indexOf(v) === i);
-                countersData[unit] = { weakness, strong_counter };
+                    .filter((v, i, a) => a.indexOf(v) === i)
+                    .sort((x, y) => x.localeCompare(y));
+                countersData[unit] = { weakness, strong_counter, synergizes: [] };
             });
 
             // Render below the table
             let output = '<h3 style="margin-top:2em;">countersData = {<br>';
             Object.entries(countersData).forEach(([unit, obj]) => {
-                output += `&nbsp;&nbsp;"${unit}": { "weakness": [${obj.weakness.map(u => `\"${u}\"`).join(', ')}], "strong_counter": [${obj.strong_counter.map(u => `\"${u}\"`).join(', ')}] },<br>`;
+                output += `&nbsp;&nbsp;"${unit}": { "weakness": [${obj.weakness.map(u => `\"${u}\"`).join(', ')}], "strong_counter": [${obj.strong_counter.map(u => `\"${u}\"`).join(', ')}], "synergizes": [${obj.synergizes.map(u => `\"${u}\"`).join(', ')}] },<br>`;
             });
             output += '};</h3>';
             const div = document.createElement('div');
